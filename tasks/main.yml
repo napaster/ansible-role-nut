@@ -123,6 +123,10 @@
         enabled: "{{ nut_services_enable | bool }}"
         state: 'started'
         daemon_reload: true
+      # В check-режиме пакет не ставится, и на хосте без NUT юнита ещё нет:
+      # задача упала бы, и проверить роль перед первой установкой стало бы
+      # нельзя. На реальном прогоне ошибки не глушим.
+      ignore_errors: "{{ ansible_check_mode | bool }}"
 
     - name: 'nut | Enable upsmon'
       ansible.builtin.systemd_service:
@@ -130,9 +134,18 @@
         enabled: "{{ nut_services_enable | bool }}"
         state: 'started'
       when: "nut_upsmon_monitor | length > 0"
+      # В check-режиме пакет не ставится, и на хосте без NUT юнита ещё нет:
+      # задача упала бы, и проверить роль перед первой установкой стало бы
+      # нельзя. На реальном прогоне ошибки не глушим.
+      ignore_errors: "{{ ansible_check_mode | bool }}"
 
     - name: 'nut | Enable nut.target'
       ansible.builtin.systemd_service:
         name: 'nut.target'
         enabled: "{{ nut_services_enable | bool }}"
       when: "nut_services_enable | bool"
+      # В check-режиме пакет не ставится, и на хосте без NUT юнита ещё нет:
+      # задача упала бы, и проверить роль перед первой установкой стало бы
+      # нельзя. На реальном прогоне ошибки не глушим.
+      ignore_errors: "{{ ansible_check_mode | bool }}"
+
