@@ -1,0 +1,7 @@
+# {{ ansible_managed }}
+{% for l in nut_upsd_listen %}
+LISTEN {{ l['address'] }} {{ l['port'] | default('3493') }}
+{% endfor %}
+{% for k, v in nut_upsd_options.items() %}
+{{ k }} {{ v }}
+{% endfor %}

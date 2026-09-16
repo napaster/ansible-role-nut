@@ -1,0 +1,46 @@
+---
+# Роль пустая по умолчанию: без nut_ups не делает ничего.
+nut_enable: 'false'
+nut_package_state: 'present'
+nut_manage_config: true
+
+# standalone — драйверы+upsd+upsmon локально; netserver — то же, но upsd
+# слушает наружу; netclient — только upsmon до чужого upsd.
+nut_mode: 'standalone'
+
+# Глобальная секция ups.conf. maxretry — сколько раз upsdrvctl пробует
+# поднять драйвер: USB-устройство к моменту старта готово не всегда, и с
+# одной попытки драйвер останется лежать до ручного вмешательства.
+nut_ups_global:
+  maxretry: '3'
+
+# [{name, driver, port, desc, options: {}}]
+# options уходит в секцию как есть: vendorid/productid/subdriver для USB,
+# community/mibs для SNMP.
+nut_ups: []
+
+# [{name, password, upsmon: primary|secondary, actions: [], instcmds: []}]
+# Пароли — только из vault.
+nut_users: []
+
+nut_upsd_listen:
+  - address: '127.0.0.1'
+    port: '3493'
+nut_upsd_options: {}
+
+# [{ups, powervalue, user, password, type: primary|secondary}]
+# Пусто = upsmon не поднимается вовсе.
+nut_upsmon_monitor: []
+nut_upsmon_minsupplies: '1'
+nut_upsmon_shutdowncmd: '/usr/bin/systemctl poweroff'
+nut_upsmon_powerdownflag: '/run/killpower'
+nut_upsmon_finaldelay: '5'
+nut_upsmon_options: {}
+nut_upsmon_notifycmd: ''
+nut_upsmon_notify: {}
+
+nut_services_enable: true
+
+# Демоны, которые дерутся за тот же ИБП. Роль их гасит и убирает из
+# автозапуска — иначе после ребута хозяином станет тот, кто стартовал раньше.
+nut_conflicting_services: []

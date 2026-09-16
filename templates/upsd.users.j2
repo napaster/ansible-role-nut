@@ -1,0 +1,15 @@
+# {{ ansible_managed }}
+{% for u in nut_users %}
+
+[{{ u['name'] }}]
+    password = {{ u['password'] }}
+{% for a in u['actions'] | default([]) %}
+    actions = {{ a }}
+{% endfor %}
+{% for c in u['instcmds'] | default([]) %}
+    instcmds = {{ c }}
+{% endfor %}
+{% if u['upsmon'] is defined %}
+    upsmon {{ u['upsmon'] }}
+{% endif %}
+{% endfor %}

@@ -1,0 +1,120 @@
+---
+- name: 'nut | Deploy'
+  when:
+    - "nut_enable | bool"
+    - "nut_ups | length > 0 or nut_upsmon_monitor | length > 0"
+  block:
+
+    - name: 'nut | Add the OS specific variables'
+      ansible.builtin.include_vars: "{{ ansible_facts['os_family'] }}.yml"
+
+    - name: 'nut | Assert that upsmon has credentials'
+      ansible.builtin.assert:
+        that:
+          - "item['user'] is defined and item['user'] | length > 0"
+          - "item['password'] is defined and item['password'] | length > 0"
+        fail_msg: "MONITOR без user/password молча не подключится, и хост
+          останется без выключения по низкому заряду: {{ item['ups'] | default('???') }}"
+        quiet: true
+      loop: "{{ nut_upsmon_monitor }}"
+      loop_control:
+        label: "{{ item['ups'] | default('???') }}"
+
+    - name: 'nut | Install packages'
+      ansible.builtin.package:
+        name: "{{ nut_packages }}"
+        state: "{{ nut_package_state }}"
+
+    # Чужой демон, поднятый раньше, займёт устройство, и драйвер NUT встанет
+    # с ошибкой доступа. Гасим до раскладки конфигов.
+    - name: 'nut | Stop conflicting services'
+      ansible.builtin.systemd_service:
+        name: "{{ item }}"
+        state: 'stopped'
+        enabled: false
+      loop: "{{ nut_conflicting_services }}"
+      failed_when: false
+
+    - name: 'nut | Deploy nut.conf'
+      ansible.builtin.template:
+        src: 'nut.conf.j2'
+        dest: "{{ nut_conf_dir }}/nut.conf"
+        owner: 'root'
+        group: "{{ nut_group }}"
+        mode: '0640'
+      when: "nut_manage_config | bool"
+      notify: ['nut restart drivers', 'nut restart upsd', 'nut restart upsmon']
+
+    - name: 'nut | Deploy ups.conf'
+      ansible.builtin.template:
+        src: 'ups.conf.j2'
+        dest: "{{ nut_conf_dir }}/ups.conf"
+        owner: 'root'
+        group: "{{ nut_group }}"
+        mode: '0640'
+      when: "nut_manage_config | bool"
+      notify: ['nut restart drivers', 'nut restart upsd']
+
+    - name: 'nut | Deploy upsd.conf'
+      ansible.builtin.template:
+        src: 'upsd.conf.j2'
+        dest: "{{ nut_conf_dir }}/upsd.conf"
+        owner: 'root'
+        group: "{{ nut_group }}"
+        mode: '0640'
+      when: "nut_manage_config | bool"
+      notify: 'nut restart upsd'
+
+    # 0640 root:nut — обязательное: файл содержит пароли, а upsd читает его
+    # уже под пользователем nut. Любые другие права = либо отказ старта,
+    # либо пароли наружу.
+    - name: 'nut | Deploy upsd.users'
+      ansible.builtin.template:
+        src: 'upsd.users.j2'
+        dest: "{{ nut_conf_dir }}/upsd.users"
+        owner: 'root'
+        group: "{{ nut_group }}"
+        mode: '0640'
+      when: "nut_manage_config | bool"
+      no_log: true
+      notify: ['nut restart upsd', 'nut restart upsmon']
+
+    - name: 'nut | Deploy upsmon.conf'
+      ansible.builtin.template:
+        src: 'upsmon.conf.j2'
+        dest: "{{ nut_conf_dir }}/upsmon.conf"
+        owner: 'root'
+        group: "{{ nut_group }}"
+        mode: '0640'
+      when:
+        - "nut_manage_config | bool"
+        - "nut_upsmon_monitor | length > 0"
+      no_log: true
+      notify: 'nut restart upsmon'
+
+    - name: 'nut | Enumerate drivers'
+      ansible.builtin.systemd_service:
+        name: 'nut-driver-enumerator.service'
+        enabled: "{{ nut_services_enable | bool }}"
+        state: 'started'
+      failed_when: false
+
+    - name: 'nut | Enable upsd'
+      ansible.builtin.systemd_service:
+        name: 'nut-server.service'
+        enabled: "{{ nut_services_enable | bool }}"
+        state: 'started'
+        daemon_reload: true
+
+    - name: 'nut | Enable upsmon'
+      ansible.builtin.systemd_service:
+        name: 'nut-monitor.service'
+        enabled: "{{ nut_services_enable | bool }}"
+        state: 'started'
+      when: "nut_upsmon_monitor | length > 0"
+
+    - name: 'nut | Enable nut.target'
+      ansible.builtin.systemd_service:
+        name: 'nut.target'
+        enabled: "{{ nut_services_enable | bool }}"
+      when: "nut_services_enable | bool"

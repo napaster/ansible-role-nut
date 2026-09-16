@@ -1,0 +1,31 @@
+---
+# ups.conf читает не сам драйвер, а nut-driver-enumerator: он создаёт и удаляет
+# юниты nut-driver@<имя>. Поэтому мало перезапустить драйвер — сначала
+# перечитать список, иначе новая секция просто не появится.
+- name: 'nut | Re-enumerate drivers'
+  ansible.builtin.systemd_service:
+    name: 'nut-driver-enumerator.service'
+    state: 'restarted'
+  listen: 'nut restart drivers'
+
+- name: 'nut | Restart drivers'
+  ansible.builtin.systemd_service:
+    name: "nut-driver@{{ item['name'] }}.service"
+    state: 'restarted'
+  loop: "{{ nut_ups }}"
+  loop_control:
+    label: "{{ item['name'] }}"
+  listen: 'nut restart drivers'
+
+- name: 'nut | Restart upsd'
+  ansible.builtin.systemd_service:
+    name: 'nut-server.service'
+    state: 'restarted'
+  listen: 'nut restart upsd'
+
+- name: 'nut | Restart upsmon'
+  ansible.builtin.systemd_service:
+    name: 'nut-monitor.service'
+    state: 'restarted'
+  when: "nut_upsmon_monitor | length > 0"
+  listen: 'nut restart upsmon'

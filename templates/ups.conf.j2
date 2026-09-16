@@ -1,0 +1,16 @@
+# {{ ansible_managed }}
+{% for k, v in nut_ups_global.items() %}
+{{ k }} = {{ v }}
+{% endfor %}
+{% for u in nut_ups %}
+
+[{{ u['name'] }}]
+    driver = {{ u['driver'] }}
+    port = {{ u['port'] | default('auto') }}
+{% if u['desc'] is defined %}
+    desc = "{{ u['desc'] }}"
+{% endif %}
+{% for k, v in (u['options'] | default({})).items() %}
+    {{ k }} = {{ v }}
+{% endfor %}
+{% endfor %}

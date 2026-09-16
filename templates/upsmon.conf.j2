@@ -1,0 +1,18 @@
+# {{ ansible_managed }}
+{% for m in nut_upsmon_monitor %}
+MONITOR {{ m['ups'] }} {{ m['powervalue'] | default(1) }} {{ m['user'] }} {{ m['password'] }} {{ m['type'] | default('primary') }}
+{% endfor %}
+
+MINSUPPLIES {{ nut_upsmon_minsupplies }}
+SHUTDOWNCMD "{{ nut_upsmon_shutdowncmd }}"
+POWERDOWNFLAG {{ nut_upsmon_powerdownflag }}
+FINALDELAY {{ nut_upsmon_finaldelay }}
+{% if nut_upsmon_notifycmd | length > 0 %}
+NOTIFYCMD {{ nut_upsmon_notifycmd }}
+{% endif %}
+{% for k, v in nut_upsmon_notify.items() %}
+NOTIFYFLAG {{ k }} {{ v }}
+{% endfor %}
+{% for k, v in nut_upsmon_options.items() %}
+{{ k }} {{ v }}
+{% endfor %}

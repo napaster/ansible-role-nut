@@ -1,0 +1,5 @@
+---
+nut_packages: ['nut']
+nut_conf_dir: '/etc/nut'
+nut_driver_dir: '/usr/lib/nut'
+nut_group: 'nut'
