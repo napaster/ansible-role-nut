@@ -39,6 +39,16 @@ nut_upsmon_options: {}
 nut_upsmon_notifycmd: ''
 nut_upsmon_notify: {}
 
+# Драйверы, работающие через USB: для них нужно переиграть правила udev,
+# если устройство было подключено до установки NUT.
+nut_usb_drivers:
+  - 'usbhid-ups'
+  - 'nutdrv_qx'
+  - 'blazer_usb'
+  - 'bcmxcp_usb'
+  - 'tripplite_usb'
+  - 'richcomm_usb'
+
 nut_services_enable: true
 
 # Демоны, которые дерутся за тот же ИБП. Роль их гасит и убирает из
