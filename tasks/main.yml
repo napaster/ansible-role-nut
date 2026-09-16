@@ -35,6 +35,21 @@
       loop: "{{ nut_conflicting_services }}"
       failed_when: false
 
+    # Правила udev из пакета NUT срабатывают на СОБЫТИЕ подключения. Если ИБП
+    # был воткнут раньше, чем поставили NUT, устройство остаётся root:root, и
+    # драйвер падает с "insufficient permissions on everything". Перечитываем
+    # правила и переигрываем события для USB — иначе лечится только
+    # передёргиванием кабеля, а до него ещё надо доехать.
+    - name: 'nut | Re-apply udev rules for already-connected USB devices'
+      ansible.builtin.command:
+        cmd: "{{ item }}"
+      loop:
+        - 'udevadm control --reload-rules'
+        - 'udevadm trigger --subsystem-match=usb'
+      changed_when: false
+      when:
+        - "nut_ups | selectattr('driver', 'in', nut_usb_drivers) | list | length > 0"
+
     - name: 'nut | Deploy nut.conf'
       ansible.builtin.template:
         src: 'nut.conf.j2'
