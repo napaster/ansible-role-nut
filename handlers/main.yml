@@ -29,3 +29,9 @@
     state: 'restarted'
   when: "nut_upsmon_monitor | length > 0"
   listen: 'nut restart upsmon'
+
+- name: 'nut | Restart netdata'
+  ansible.builtin.systemd_service:
+    name: 'netdata.service'
+    state: 'restarted'
+  listen: 'nut restart netdata'

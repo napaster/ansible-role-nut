@@ -1,0 +1,8 @@
+# {{ ansible_managed }}
+jobs:
+{% for u in nut_ups %}
+  - name: '{{ u['name'] }}'
+    address: '{{ nut_netdata_address }}'
+    ups_name: '{{ u['name'] }}'
+    update_every: {{ nut_netdata_update_every }}
+{% endfor %}

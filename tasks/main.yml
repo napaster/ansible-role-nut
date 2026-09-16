@@ -92,6 +92,24 @@
       no_log: true
       notify: 'nut restart upsmon'
 
+    - name: 'nut | Deploy netdata go.d/upsd collector'
+      ansible.builtin.template:
+        src: 'netdata-upsd.conf.j2'
+        dest: "{{ nut_netdata_conf_dir }}/go.d/upsd.conf"
+        owner: 'root'
+        group: 'root'
+        mode: '0644'
+      when: "nut_netdata_enable | bool"
+      notify: 'nut restart netdata'
+
+    - name: 'nut | Drop stale netdata collectors'
+      ansible.builtin.file:
+        path: "{{ nut_netdata_conf_dir }}/go.d/{{ item }}.conf"
+        state: 'absent'
+      loop: "{{ nut_netdata_drop_collectors }}"
+      when: "nut_netdata_enable | bool"
+      notify: 'nut restart netdata'
+
     - name: 'nut | Enumerate drivers'
       ansible.builtin.systemd_service:
         name: 'nut-driver-enumerator.service'

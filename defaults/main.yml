@@ -44,3 +44,16 @@ nut_services_enable: true
 # Демоны, которые дерутся за тот же ИБП. Роль их гасит и убирает из
 # автозапуска — иначе после ребута хозяином станет тот, кто стартовал раньше.
 nut_conflicting_services: []
+
+# Отдать данные в netdata собственным коллектором go.d/upsd. Роль netdata —
+# сабмодуль k0ste, коллектора upsd в ней нет, но чужие файлы в go.d она не
+# чистит, поэтому конфиг кладём отсюда.
+nut_netdata_enable: false
+nut_netdata_conf_dir: '/etc/netdata'
+nut_netdata_address: '127.0.0.1:3493'
+nut_netdata_update_every: 15
+
+# Коллекторы, чей демон на этом хосте больше не живёт. Оставленный конфиг
+# продолжит опрашивать мёртвый сокет, и мониторинг поднимет ложный алерт
+# «collector offline».
+nut_netdata_drop_collectors: []

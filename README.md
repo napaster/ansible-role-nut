@@ -68,3 +68,17 @@ nut_ups:
 ## Поддержка
 
 Archlinux и Debian. На Debian пакеты называются `nut-server` / `nut-client`.
+
+## netdata
+
+`nut_netdata_enable: true` кладёт `/etc/netdata/go.d/upsd.conf` с заданием на
+каждую секцию из `nut_ups`. Роль `netdata` — сабмодуль k0ste, коллектора
+`upsd` в ней нет, но чужие файлы в `go.d` она не удаляет, поэтому конфиг
+приходит отсюда.
+
+`nut_netdata_drop_collectors: ['apcupsd']` снимает конфиг коллектора, чей
+демон на хосте больше не живёт. Без этого netdata продолжит опрашивать мёртвый
+сокет, и мониторинг поднимет ложный «collector offline».
+
+**Имена метрик меняются:** было `netdata_apcupsd_*`, стало `netdata_upsd_*`.
+Правила на промке надо переводить вместе с хостом.
