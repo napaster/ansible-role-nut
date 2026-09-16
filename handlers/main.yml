@@ -7,6 +7,9 @@
     name: 'nut-driver-enumerator.service'
     state: 'restarted'
   listen: 'nut restart drivers'
+  # В check-режиме юнита может ещё не быть (пакет не установлен).
+  # На реальном прогоне ошибки не глушим.
+  ignore_errors: "{{ ansible_check_mode | bool }}"
 
 - name: 'nut | Restart drivers'
   ansible.builtin.systemd_service:
@@ -16,12 +19,18 @@
   loop_control:
     label: "{{ item['name'] }}"
   listen: 'nut restart drivers'
+  # В check-режиме юнита может ещё не быть (пакет не установлен).
+  # На реальном прогоне ошибки не глушим.
+  ignore_errors: "{{ ansible_check_mode | bool }}"
 
 - name: 'nut | Restart upsd'
   ansible.builtin.systemd_service:
     name: 'nut-server.service'
     state: 'restarted'
   listen: 'nut restart upsd'
+  # В check-режиме юнита может ещё не быть (пакет не установлен).
+  # На реальном прогоне ошибки не глушим.
+  ignore_errors: "{{ ansible_check_mode | bool }}"
 
 - name: 'nut | Restart upsmon'
   ansible.builtin.systemd_service:
@@ -29,9 +38,15 @@
     state: 'restarted'
   when: "nut_upsmon_monitor | length > 0"
   listen: 'nut restart upsmon'
+  # В check-режиме юнита может ещё не быть (пакет не установлен).
+  # На реальном прогоне ошибки не глушим.
+  ignore_errors: "{{ ansible_check_mode | bool }}"
 
 - name: 'nut | Restart netdata'
   ansible.builtin.systemd_service:
     name: 'netdata.service'
     state: 'restarted'
   listen: 'nut restart netdata'
+  # В check-режиме юнита может ещё не быть (пакет не установлен).
+  # На реальном прогоне ошибки не глушим.
+  ignore_errors: "{{ ansible_check_mode | bool }}"
