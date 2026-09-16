@@ -147,11 +147,25 @@
       ansible.builtin.systemd_service:
         name: 'nut-monitor.service'
         enabled: "{{ nut_services_enable | bool }}"
+        masked: false
         state: 'started'
       when: "nut_upsmon_monitor | length > 0"
       # В check-режиме пакет не ставится, и на хосте без NUT юнита ещё нет:
       # задача упала бы, и проверить роль перед первой установкой стало бы
       # нельзя. На реальном прогоне ошибки не глушим.
+      ignore_errors: "{{ ansible_check_mode | bool }}"
+
+    # Пустой nut_upsmon_monitor значит "выключать хост некому". Одного
+    # пропуска задачи мало: у nut.target статический Wants=nut-monitor.service,
+    # и после перезагрузки upsmon поднимется со штатным конфигом, где нет ни
+    # одной строки MONITOR, и упадёт. Маска — единственное, что это держит.
+    - name: 'nut | Mask upsmon when no MONITOR configured'
+      ansible.builtin.systemd_service:
+        name: 'nut-monitor.service'
+        state: 'stopped'
+        enabled: false
+        masked: true
+      when: "nut_upsmon_monitor | length == 0"
       ignore_errors: "{{ ansible_check_mode | bool }}"
 
     - name: 'nut | Enable nut.target'
