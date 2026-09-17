@@ -117,12 +117,21 @@
       when: "nut_netdata_enable | bool"
       notify: 'nut restart netdata'
 
+    # Снятие НЕ под гейтом enable: выключение интеграции обязано убирать и
+    # свой конфиг тоже, иначе коллектор остаётся и продолжает опрашивать
+    # мёртвый сокет — ровно та ложная тревога, от которой уходили.
     - name: 'nut | Drop stale netdata collectors'
       ansible.builtin.file:
         path: "{{ nut_netdata_conf_dir }}/go.d/{{ item }}.conf"
         state: 'absent'
       loop: "{{ nut_netdata_drop_collectors }}"
-      when: "nut_netdata_enable | bool"
+      notify: 'nut restart netdata'
+
+    - name: 'nut | Remove own netdata collector when integration disabled'
+      ansible.builtin.file:
+        path: "{{ nut_netdata_conf_dir }}/go.d/upsd.conf"
+        state: 'absent'
+      when: "not (nut_netdata_enable | bool)"
       notify: 'nut restart netdata'
 
     - name: 'nut | Enumerate drivers'
