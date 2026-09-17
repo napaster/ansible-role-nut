@@ -39,6 +39,14 @@ nut_upsmon_options: {}
 nut_upsmon_notifycmd: ''
 nut_upsmon_notify: {}
 
+# Группа, владеющая последовательными портами (/dev/ttyUSB*, /dev/ttyS*):
+# Arch — 'uucp', Debian — 'dialout'. Драйвер работает от пользователя nut, и
+# без членства в этой группе serial-порт ему закрыт: «Unable to open
+# /dev/ttyUSB0: Permission denied». USB-переходники внутри ИБП (CH341, PL2303)
+# видятся именно как ttyUSB — правила udev пакета их не трогают. Пусто —
+# ничего не делать.
+nut_serial_group: ''
+
 # Драйверы, работающие через USB: для них нужно переиграть правила udev,
 # если устройство было подключено до установки NUT.
 nut_usb_drivers:

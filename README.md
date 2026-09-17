@@ -29,6 +29,7 @@ upsmon порогов не вычисляет: он гасит хост по ф�
 | `nut_upsmon_monitor` | что мониторить; **пусто = upsmon не поднимается** |
 | `nut_upsmon_shutdowncmd` | по умолчанию `systemctl poweroff` |
 | `nut_conflicting_services` | демоны за тот же ИБП — гасим и убираем из автозапуска |
+| `nut_serial_group` | группа serial-портов (`uucp` на Arch, `dialout` на Debian); при непустом значении пользователь `nut` добавляется в неё — иначе драйвер не откроет `/dev/ttyUSB*`. ИБП с USB-переходником внутри (CH341/PL2303) видны именно так |
 
 ### Секция ИБП
 
