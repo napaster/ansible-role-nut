@@ -25,6 +25,16 @@
         name: "{{ nut_packages }}"
         state: "{{ nut_package_state }}"
 
+    # Serial-порт принадлежит группе uucp/dialout, драйвер — пользователю nut.
+    # Членство подхватывается при старте процесса: драйверы стартуют ниже,
+    # уже с группой. Добавляем, не заменяя существующие группы.
+    - name: 'nut | Grant serial-port group to the nut user'
+      ansible.builtin.user:
+        name: "{{ nut_user }}"
+        groups: "{{ nut_serial_group }}"
+        append: true
+      when: "nut_serial_group | length > 0"
+
     # Чужой демон, поднятый раньше, займёт устройство, и драйвер NUT встанет
     # с ошибкой доступа. Гасим до раскладки конфигов.
     - name: 'nut | Stop conflicting services'

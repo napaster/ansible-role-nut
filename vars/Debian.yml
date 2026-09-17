@@ -2,4 +2,5 @@
 nut_packages: ['nut-server', 'nut-client']
 nut_conf_dir: '/etc/nut'
 nut_driver_dir: '/lib/nut'
+nut_user: 'nut'
 nut_group: 'nut'

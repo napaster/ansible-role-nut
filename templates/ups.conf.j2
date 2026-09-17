@@ -11,6 +11,10 @@
     desc = "{{ u['desc'] }}"
 {% endif %}
 {% for k, v in (u['options'] | default({})).items() %}
+{% if v is none or (v | string | length) == 0 %}
+    {{ k }}
+{% else %}
     {{ k }} = {{ v }}
+{% endif %}
 {% endfor %}
 {% endfor %}
