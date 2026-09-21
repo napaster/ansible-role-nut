@@ -7,12 +7,19 @@ MINSUPPLIES {{ nut_upsmon_minsupplies }}
 SHUTDOWNCMD "{{ nut_upsmon_shutdowncmd }}"
 POWERDOWNFLAG {{ nut_upsmon_powerdownflag }}
 FINALDELAY {{ nut_upsmon_finaldelay }}
-{% if nut_upsmon_notifycmd | length > 0 %}
-NOTIFYCMD {{ nut_upsmon_notifycmd }}
+{% set _notifycmd = nut_upsmon_notifycmd if (nut_upsmon_notifycmd | length > 0) else (nut_notify_telegram_script if (nut_notify_telegram_enable | bool) else '') %}
+{% if _notifycmd | length > 0 %}
+NOTIFYCMD "{{ _notifycmd }}"
 {% endif %}
+{% if nut_upsmon_notify | length > 0 %}
 {% for k, v in nut_upsmon_notify.items() %}
 NOTIFYFLAG {{ k }} {{ v }}
 {% endfor %}
+{% elif nut_notify_telegram_enable | bool %}
+{% for k in nut_notify_telegram_events %}
+NOTIFYFLAG {{ k }} SYSLOG+EXEC
+{% endfor %}
+{% endif %}
 {% for k, v in nut_upsmon_options.items() %}
 {{ k }} {{ v }}
 {% endfor %}

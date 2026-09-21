@@ -31,6 +31,9 @@ upsmon порогов не вычисляет: он гасит хост по ф�
 | `nut_conflicting_services` | демоны за тот же ИБП — гасим и убираем из автозапуска |
 | `nut_ups[].options` | пары `ключ: значение` → `ключ = значение` в секции; **пустое значение** (`''`) даёт опцию-флаг без `=`, как `battery_voltage_reports_one_pack` |
 | `nut_serial_group` | группа serial-портов (`uucp` на Arch, `dialout` на Debian); при непустом значении пользователь `nut` добавляется в неё — иначе драйвер не откроет `/dev/ttyUSB*`. ИБП с USB-переходником внутри (CH341/PL2303) видны именно так |
+| `nut_notify_telegram_enable` | мгновенные уведомления о событиях ИБП в Telegram через NOTIFYCMD upsmon; скрипт кладёт роль, токен/чат из vault (`nut_notify_telegram_token`, `nut_notify_telegram_chat_id`) |
+| `nut_notify_telegram_messages` | текст по типу события (ONBATT, ONLINE, LOWBATT, REPLBATT, COMMBAD, COMMOK, NOCOMM, FSD, SHUTDOWN); чего нет в словаре — не шлётся |
+| `nut_upsmon_shutdowncmd: '/bin/true'` | режим «только уведомления»: upsmon работает, события шлёт, хост при FSD не гасит |
 
 ### Секция ИБП
 
@@ -106,3 +109,19 @@ Archlinux и Debian. На Debian пакеты называются `nut-server` 
 
 **Имена метрик меняются:** было `netdata_apcupsd_*`, стало `netdata_upsd_*`.
 Правила на промке надо переводить вместе с хостом.
+
+## Уведомления в Telegram
+
+```yaml
+nut_notify_telegram_enable: true
+nut_notify_telegram_token: !vault |   # токен бота
+  ...
+nut_notify_telegram_chat_id: '-1001234567890'
+```
+
+Требует непустого `nut_upsmon_monitor` — события рождает upsmon. Скрипт
+`/usr/local/bin/nut-notify-telegram` (0750 root:nut) получает `NOTIFYTYPE`,
+`UPSNAME` и текст события, шлёт `<текст события из словаря>\nХост: … · ИБП: …`.
+Если задать свои `nut_upsmon_notifycmd`/`nut_upsmon_notify`, они имеют
+приоритет. Уведомления без выключения хоста: `nut_upsmon_shutdowncmd: '/bin/true'`.
+

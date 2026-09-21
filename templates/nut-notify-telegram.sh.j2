@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# {{ ansible_managed }}
+# NOTIFYCMD для upsmon: событие ИБП → сообщение в Telegram.
+# upsmon зовёт скрипт с текстом события в $1 и переменными окружения
+# NOTIFYTYPE (ONBATT, ONLINE, …) и UPSNAME (ups@host). Работает от пользователя
+# nut, поэтому файл 0750 root:{{ nut_group }} — токен внутри.
+set -u
+
+TOKEN='{{ nut_notify_telegram_token }}'
+CHAT_ID='{{ nut_notify_telegram_chat_id }}'
+PREFIX='{{ nut_notify_telegram_prefix }}'
+
+case "${NOTIFYTYPE:-}" in
+{% for k, v in nut_notify_telegram_messages.items() %}
+    {{ k }}) TEXT='{{ v | replace("'", "'\\''") }}' ;;
+{% endfor %}
+    *) exit 0 ;;
+esac
+
+MSG="${TEXT}"$'\n'"Хост: ${PREFIX} · ИБП: ${UPSNAME:-?}"$'\n'"${1:-}"
+
+# Без parse_mode: тексты с подчёркиваниями и скобками не должны ломать
+# разметку и терять сообщение. Таймаут короткий — upsmon ждёт скрипт.
+curl -s -m 10 -o /dev/null -X POST "https://api.telegram.org/bot${TOKEN}/sendMessage" \
+    --data-urlencode "chat_id=${CHAT_ID}" \
+    --data-urlencode "text=${MSG}" \
+    --data-urlencode "disable_web_page_preview=true" \
+    || logger -t nut-notify-telegram "send failed: ${NOTIFYTYPE:-?} ${UPSNAME:-?}"
+exit 0
