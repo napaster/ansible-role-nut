@@ -104,6 +104,26 @@
       no_log: true
       notify: ['nut restart upsd', 'nut restart upsmon']
 
+    # Скрипт читает только upsmon (RUN_AS_USER = nut): 0750 root:nut, токен
+    # внутри, поэтому no_log. При выключенной интеграции файл убираем, чтобы
+    # токен не жил на хосте зря.
+    - name: 'nut | Deploy Telegram notify script'
+      ansible.builtin.template:
+        src: 'nut-notify-telegram.sh.j2'
+        dest: "{{ nut_notify_telegram_script }}"
+        owner: 'root'
+        group: "{{ nut_group }}"
+        mode: '0750'
+      when: "nut_notify_telegram_enable | bool"
+      no_log: true
+      notify: 'nut restart upsmon'
+
+    - name: 'nut | Remove Telegram notify script when disabled'
+      ansible.builtin.file:
+        path: "{{ nut_notify_telegram_script }}"
+        state: 'absent'
+      when: "not (nut_notify_telegram_enable | bool)"
+
     - name: 'nut | Deploy upsmon.conf'
       ansible.builtin.template:
         src: 'upsmon.conf.j2'

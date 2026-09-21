@@ -75,3 +75,29 @@ nut_netdata_update_every: 15
 # продолжит опрашивать мёртвый сокет, и мониторинг поднимет ложный алерт
 # «collector offline».
 nut_netdata_drop_collectors: []
+
+# Мгновенные уведомления в Telegram о событиях ИБП через штатный NOTIFYCMD
+# upsmon (ONBATT/ONLINE/LOWBATT/…). Скрипт кладётся ролью, токен и чат —
+# из vault; на хосте файл 0750 root:<nut_group>, читает только upsmon.
+# Если nut_upsmon_notifycmd/nut_upsmon_notify не заданы, при включении
+# подставляются скрипт и флаги SYSLOG+EXEC для nut_notify_telegram_events.
+nut_notify_telegram_enable: false
+nut_notify_telegram_token: ''
+nut_notify_telegram_chat_id: ''
+nut_notify_telegram_script: '/usr/local/bin/nut-notify-telegram'
+# Префикс сообщения; по умолчанию — имя хоста.
+nut_notify_telegram_prefix: "{{ inventory_hostname }}"
+# Текст по типу события; событий, которых тут нет, скрипт не шлёт.
+nut_notify_telegram_messages:
+  ONBATT: '⚠️ Электропитание пропало 😭 😭 😭 — работа от батареи'
+  ONLINE: '✅ Электропитание восстановлено'
+  LOWBATT: '🆘 Батарея ИБП почти разряжена'
+  REPLBATT: '🔋 Требуется замена АКБ'
+  COMMBAD: '⚠️ Потеряна связь с ИБП'
+  COMMOK: '✅ Связь с ИБП восстановлена'
+  NOCOMM: '🆘 ИБП недоступен'
+  FSD: '🆘 ИБП требует выключения (FSD)'
+  SHUTDOWN: '🆘 Система выключается по команде ИБП'
+# Какие события получают флаг SYSLOG+EXEC, если nut_upsmon_notify пуст.
+nut_notify_telegram_events: ['ONBATT', 'ONLINE', 'LOWBATT', 'REPLBATT', 'COMMBAD', 'COMMOK', 'NOCOMM', 'FSD', 'SHUTDOWN']
+
