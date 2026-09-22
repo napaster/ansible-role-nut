@@ -35,7 +35,13 @@ nut_upsmon_minsupplies: '1'
 nut_upsmon_shutdowncmd: '/usr/bin/systemctl poweroff'
 nut_upsmon_powerdownflag: '/run/killpower'
 nut_upsmon_finaldelay: '5'
-nut_upsmon_options: {}
+# Служебные параметры upsmon. NOCOMMWARNTIME важен: по умолчанию NUT повторяет
+# NOCOMM каждые 300 секунд, и при включённом Telegram это сообщение раз в пять
+# минут всё время, пока связи нет. 22.09.2026 на lealav так пришло 46 штук за
+# ночь. Ставим полчаса; сам факт обрыва всё равно приходит сразу событием
+# COMMBAD, NOCOMM — это повторное напоминание.
+nut_upsmon_options:
+  NOCOMMWARNTIME: 1800
 nut_upsmon_notifycmd: ''
 nut_upsmon_notify: {}
 

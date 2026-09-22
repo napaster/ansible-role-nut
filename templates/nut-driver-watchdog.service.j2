@@ -1,0 +1,8 @@
+# {{ ansible_managed }}
+[Unit]
+Description=NUT driver watchdog
+After=nut-server.service
+
+[Service]
+Type=oneshot
+ExecStart={{ nut_driver_watchdog_script }}

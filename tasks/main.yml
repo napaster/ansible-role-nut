@@ -137,6 +137,46 @@
       no_log: true
       notify: 'nut restart upsmon'
 
+    # Сторож драйвера: upsc молчит N раз подряд — перезапускаем драйвер.
+    - name: 'nut | Deploy driver watchdog script'
+      ansible.builtin.template:
+        src: 'nut-driver-watchdog.sh.j2'
+        dest: "{{ nut_driver_watchdog_script }}"
+        owner: 'root'
+        group: 'root'
+        mode: '0755'
+      when: "nut_driver_watchdog_enable | bool"
+
+    - name: 'nut | Deploy driver watchdog units'
+      ansible.builtin.template:
+        src: "nut-driver-watchdog.{{ item }}.j2"
+        dest: "/etc/systemd/system/nut-driver-watchdog.{{ item }}"
+        owner: 'root'
+        group: 'root'
+        mode: '0644'
+      loop: ['service', 'timer']
+      when: "nut_driver_watchdog_enable | bool"
+      notify: 'nut restart driver watchdog'
+
+    - name: 'nut | Enable driver watchdog timer'
+      ansible.builtin.systemd_service:
+        name: 'nut-driver-watchdog.timer'
+        enabled: true
+        state: 'started'
+        daemon_reload: true
+      when: "nut_driver_watchdog_enable | bool"
+      ignore_errors: "{{ ansible_check_mode | bool }}"
+
+    - name: 'nut | Remove driver watchdog when disabled'
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: 'absent'
+      loop:
+        - "{{ nut_driver_watchdog_script }}"
+        - '/etc/systemd/system/nut-driver-watchdog.service'
+        - '/etc/systemd/system/nut-driver-watchdog.timer'
+      when: "not (nut_driver_watchdog_enable | bool)"
+
     - name: 'nut | Deploy netdata go.d/upsd collector'
       ansible.builtin.template:
         src: 'netdata-upsd.conf.j2'

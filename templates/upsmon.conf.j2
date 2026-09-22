@@ -17,7 +17,7 @@ NOTIFYFLAG {{ k }} {{ v }}
 {% endfor %}
 {% elif nut_notify_telegram_enable | bool %}
 {% for k in nut_notify_telegram_events %}
-NOTIFYFLAG {{ k }} SYSLOG+EXEC
+NOTIFYFLAG {{ k }} {{ 'SYSLOG' if k in nut_notify_telegram_events_syslog_only else 'SYSLOG+EXEC' }}
 {% endfor %}
 {% endif %}
 {% for k, v in nut_upsmon_options.items() %}
