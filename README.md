@@ -125,3 +125,23 @@ nut_notify_telegram_chat_id: '-1001234567890'
 Если задать свои `nut_upsmon_notifycmd`/`nut_upsmon_notify`, они имеют
 приоритет. Уведомления без выключения хоста: `nut_upsmon_shutdowncmd: '/bin/true'`.
 
+## Сторож драйвера
+
+`usbhid-ups` переживает не всякое переподключение USB. 22.09.2026 на lealav ИБП
+отвалился и через секунду вернулся с новым номером устройства; драйвер остался
+со старым хэндлом и три с половиной часа отвечал «No such device», а upsmon всё
+это время слал «ИБП недоступен» каждые пять минут. Лечится перезапуском
+`nut-driver@<ups>`.
+
+`nut_driver_watchdog_enable: true` ставит таймер, который раз в
+`nut_driver_watchdog_interval` дёргает `upsc <ups> ups.status` и после
+`nut_driver_watchdog_failures` подряд неудач перезапускает драйвер. Пишет в
+syslog под тегом `nut-driver-watchdog`.
+
+## Шум от NOCOMM
+
+`NOCOMM` в upsmon повторяется каждые `NOCOMMWARNTIME` секунд, пока связи нет;
+у NUT это 300 по умолчанию. С Telegram получается сообщение раз в пять минут.
+Поэтому в роли `NOCOMMWARNTIME` поднят до 1800, а сам `NOCOMM` по умолчанию
+пишется только в syslog (`nut_notify_telegram_events_syslog_only`): о разрыве
+уже сообщает `COMMBAD`, о восстановлении `COMMOK`.

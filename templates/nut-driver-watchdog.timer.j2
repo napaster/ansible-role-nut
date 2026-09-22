@@ -1,0 +1,11 @@
+# {{ ansible_managed }}
+[Unit]
+Description=NUT driver watchdog timer
+
+[Timer]
+OnBootSec={{ nut_driver_watchdog_interval }}
+OnUnitActiveSec={{ nut_driver_watchdog_interval }}
+AccuracySec=15s
+
+[Install]
+WantedBy=timers.target

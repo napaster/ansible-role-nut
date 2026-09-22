@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# {{ ansible_managed }}
+# Сторож драйверов NUT. usbhid-ups переживает не всякое переподключение USB:
+# устройство возвращается с новым номером, а драйвер остаётся со старым
+# хэндлом и молча перестаёт отдавать данные. Внешне это выглядит как
+# «ИБП недоступен» и повторяется, пока кто-нибудь не перезапустит драйвер.
+set -u
+
+FAILDIR='/run/nut-driver-watchdog'
+MAXFAIL={{ nut_driver_watchdog_failures }}
+mkdir -p "$FAILDIR"
+
+for ups in {{ nut_ups | map(attribute='name') | join(' ') }}; do
+    if upsc "$ups" ups.status >/dev/null 2>&1; then
+        rm -f "$FAILDIR/$ups"
+        continue
+    fi
+    n=$(( $(cat "$FAILDIR/$ups" 2>/dev/null || echo 0) + 1 ))
+    echo "$n" > "$FAILDIR/$ups"
+    logger -t nut-driver-watchdog "upsc $ups не отвечает, попытка $n из $MAXFAIL"
+    if [ "$n" -ge "$MAXFAIL" ]; then
+        logger -t nut-driver-watchdog "перезапускаю nut-driver@$ups"
+        systemctl restart "nut-driver@${ups}.service" && rm -f "$FAILDIR/$ups"
+    fi
+done
+exit 0
