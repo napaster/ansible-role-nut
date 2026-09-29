@@ -106,4 +106,15 @@ nut_notify_telegram_messages:
   SHUTDOWN: '🆘 Система выключается по команде ИБП'
 # Какие события получают флаг SYSLOG+EXEC, если nut_upsmon_notify пуст.
 nut_notify_telegram_events: ['ONBATT', 'ONLINE', 'LOWBATT', 'REPLBATT', 'COMMBAD', 'COMMOK', 'NOCOMM', 'FSD', 'SHUTDOWN']
+# События, которые пишутся только в syslog, без Telegram. NOCOMM повторяется
+# каждые NOCOMMWARNTIME, пока связи нет; о самом разрыве уже сообщает COMMBAD,
+# о восстановлении — COMMOK (см. README, «Шум от NOCOMM»).
+nut_notify_telegram_events_syslog_only: ['NOCOMM']
 
+# Сторож драйвера (см. README): раз в interval проверяет `upsc <ups> ups.status`
+# и после failures неудач подряд перезапускает nut-driver@<ups>. Выключен по
+# умолчанию — включать на хостах, где ИБП по USB и бывают переподключения.
+nut_driver_watchdog_enable: false
+nut_driver_watchdog_interval: '2min'   # формат systemd.time
+nut_driver_watchdog_failures: 3
+nut_driver_watchdog_script: '/usr/local/sbin/nut-driver-watchdog'
