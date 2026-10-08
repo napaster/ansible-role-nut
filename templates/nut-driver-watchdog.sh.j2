@@ -23,4 +23,30 @@ for ups in {{ nut_ups | map(attribute='name') | join(' ') }}; do
         systemctl restart "nut-driver@${ups}.service" && rm -f "$FAILDIR/$ups"
     fi
 done
+
+# Потеря связи с ИБП дольше DEADTIME заставляет upsmon (MINSUPPLIES 1) поставить FSD и завершиться,
+# даже если SHUTDOWNCMD — заглушка. Драйвер сторож поднимет, но флаг FSD остаётся в upsd, а монитора
+# питания больше нет (gw.2110000, 08.10.2026). Снимаем зависший FSD только когда ИБП на сети (OL),
+# не на батарее и не разряжен, и выключение не начато (нет флага killpower).
+for ups in {{ nut_ups | map(attribute='name') | join(' ') }}; do
+    st=$(upsc "$ups" ups.status 2>/dev/null) || continue
+    case " $st " in
+        *" FSD "*) ;;
+        *) continue ;;
+    esac
+    case " $st " in
+        *" OB "*|*" LB "*) continue ;;
+        *" OL "*) ;;
+        *) continue ;;
+    esac
+    [ -e /run/killpower ] && continue
+    logger -t nut-driver-watchdog "$ups: зависший FSD при статусе '$st', перезапускаю nut-server"
+    systemctl restart nut-server.service
+done
+
+if systemctl is-enabled --quiet nut-monitor.service 2>/dev/null \
+        && ! systemctl is-active --quiet nut-monitor.service; then
+    logger -t nut-driver-watchdog "nut-monitor не работает, запускаю"
+    systemctl start nut-monitor.service
+fi
 exit 0
