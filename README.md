@@ -138,6 +138,13 @@ nut_notify_telegram_chat_id: '-1001234567890'
 `nut_driver_watchdog_failures` подряд неудач перезапускает драйвер. Пишет в
 syslog под тегом `nut-driver-watchdog`.
 
+Тот же сторож чинит последствия потери связи. Если связь с ИБП пропала дольше
+`DEADTIME`, upsmon при `MINSUPPLIES 1` ставит FSD и завершается, даже когда
+`SHUTDOWNCMD` — заглушка. После перезапуска драйвера флаг FSD остаётся в upsd,
+а монитора питания нет. Сторож перезапускает `nut-server`, если статус содержит
+FSD при OL без OB и LB и нет `/run/killpower`, и запускает `nut-monitor`,
+если тот включён, но не работает.
+
 ## Шум от NOCOMM
 
 `NOCOMM` в upsmon повторяется каждые `NOCOMMWARNTIME` секунд, пока связи нет;
